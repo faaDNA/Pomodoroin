@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 type Mode = "focus" | "short" | "long";
 
@@ -28,6 +28,41 @@ const MODE_STROKE: Record<Mode, string> = {
 
 const LONG_BREAK_AFTER = 4;
 
+const STORAGE_KEY = "podomoroin.durations";
+const CHANGED = "podomoroin:durations-changed";
+
+let cachedDurations: Durations | null = null;
+
+function readDurations(): Durations {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return { ...DEFAULT_DURATIONS, ...(JSON.parse(raw) as Partial<Durations>) };
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+  return DEFAULT_DURATIONS;
+}
+
+function subscribeDurations(cb: () => void): () => void {
+  window.addEventListener("storage", cb);
+  window.addEventListener(CHANGED, cb);
+  return () => {
+    window.removeEventListener("storage", cb);
+    window.removeEventListener(CHANGED, cb);
+  };
+}
+
+function getDurationsSnapshot(): Durations {
+  cachedDurations ??= readDurations();
+  return cachedDurations;
+}
+
+function writeDurations(next: Durations): void {
+  cachedDurations = next;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  window.dispatchEvent(new Event(CHANGED));
+}
+
 function beep(ctx: AudioContext, offset: number, freq: number) {
   const start = ctx.currentTime + offset;
   const osc = ctx.createOscillator();
@@ -50,22 +85,16 @@ function formatTime(ms: number): string {
 }
 
 export default function Home() {
-  const [durations, setDurations] = useState<Durations>(() => {
-    if (typeof window === "undefined") return DEFAULT_DURATIONS;
-    const stored = localStorage.getItem("podomoroin.durations");
-    if (stored) {
-      try {
-        return JSON.parse(stored) as Durations;
-      } catch {
-        /* ignore */
-      }
-    }
-    return DEFAULT_DURATIONS;
-  });
+  // server snapshot = defaults, client snapshot = localStorage; React swaps them after hydration
+  const durations = useSyncExternalStore(
+    subscribeDurations,
+    getDurationsSnapshot,
+    () => DEFAULT_DURATIONS,
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("focus");
   const [round, setRound] = useState(1);
-  const [remainingMs, setRemainingMs] = useState(25 * 60_000);
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
   const [muted, setMuted] = useState(false);
   const [completed, setCompleted] = useState(0);
@@ -98,7 +127,7 @@ export default function Home() {
 
   const load = useCallback((next: Mode, ms: number) => {
     setMode(next);
-    setRemainingMs(ms);
+    setRemainingMs(null);
     deadlineRef.current = Date.now() + ms;
   }, []);
 
@@ -130,7 +159,7 @@ export default function Home() {
 
   const start = useCallback(() => {
     if (running) return;
-    const left = remainingMs > 0 ? remainingMs : durations[mode] * 60_000;
+    const left = remainingMs ?? durations[mode] * 60_000;
     deadlineRef.current = Date.now() + left;
     setRemainingMs(left);
     setRunning(true);
@@ -160,10 +189,10 @@ export default function Home() {
 
   const changeDuration = useCallback(
     (key: Mode, v: number) => {
-      setDurations((d) => ({ ...d, [key]: v }));
-      if (mode === key && !running) load(key, v * 60_000);
+      writeDurations({ ...getDurationsSnapshot(), [key]: v });
+      if (mode === key && !running) setRemainingMs(null);
     },
-    [mode, running, load],
+    [mode, running],
   );
 
   // fetch config/stats on mount
@@ -176,15 +205,13 @@ export default function Home() {
           shortBreakMinutes: number;
           longBreakMinutes: number;
         }) => {
-          setDurations((prev) => {
-            const hasStored = localStorage.getItem("podomoroin.durations");
-            if (hasStored) return prev;
-            return {
+          if (!localStorage.getItem(STORAGE_KEY)) {
+            writeDurations({
               focus: cfg.focusMinutes,
               short: cfg.shortBreakMinutes,
               long: cfg.longBreakMinutes,
-            };
-          });
+            });
+          }
           setBackendUp(true);
         },
       )
@@ -196,18 +223,17 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("podomoroin.durations", JSON.stringify(durations));
-  }, [durations]);
+  const totalMs = durations[mode] * 60_000;
+  const shownMs = remainingMs ?? totalMs;
 
   useEffect(() => {
-    document.title = `${formatTime(remainingMs)} — Podomoroin`;
-  }, [remainingMs]);
+    document.title = `${formatTime(shownMs)} — Podomoroin`;
+  }, [shownMs]);
 
   useEffect(() => clearTicker, [clearTicker]);
 
-  const totalMs = durations[mode] * 60_000;
-  const progress = totalMs > 0 ? 1 - remainingMs / totalMs : 0;
+  const progress =
+    totalMs > 0 ? Math.min(1, Math.max(0, 1 - shownMs / totalMs)) : 0;
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
   const stroke = MODE_STROKE[mode];
@@ -283,7 +309,7 @@ export default function Home() {
                 className="font-mono text-5xl font-bold tabular-nums tracking-tight sm:text-6xl"
                 aria-live="off"
               >
-                {formatTime(remainingMs)}
+                {formatTime(shownMs)}
               </span>
               <span className="text-sm text-slate-400">
                 {MODE_LABEL[mode]} · putaran {round}
@@ -293,7 +319,7 @@ export default function Home() {
 
           <p className="sr-only" aria-live="polite">
             {running
-              ? `${formatTime(remainingMs)} tersisa`
+              ? `${formatTime(shownMs)} tersisa`
               : `${MODE_LABEL[mode]} siap`}
           </p>
 
