@@ -278,7 +278,7 @@ Borders are hairlines or rings, never strokes: 1px `ring-line` at 80% on the car
 
 - **Style:** Number inputs only, inside the settings modal: surface-elevated (#ffffff) fill, 17.6px radius, 12px × 10px padding, JetBrains Mono 14px semibold `tabular-nums`, ink text, `ring-line/80` hairline. Label above in 12px medium soft with 4px gap.
 - **Focus:** ring thickens to 2px pine at 50% (`ring-pine/50`), shadow transition only — no layout shift.
-- **Error / Disabled:** None. Values clamp in code to per-mode min/max (focus 1–90, short 1–30, long 1–60), so invalid states are unrepresentable rather than styled.
+- **Editing:** The field takes free text while focused — it may sit empty after select-all-delete, and only valid numbers (or `Enter` / blur) write to the store. On blur an empty or out-of-range field settles to the last valid value, clamped to per-mode bounds (focus 1–90, short 1–30, long 1–60). If the value is changed elsewhere, a field that is focused keeps the user's text instead of snapping under the caret. No error styling; invalid states are resolved rather than shown.
 
 ### Navigation
 
@@ -290,7 +290,7 @@ A three-column segmented pill: sunk (#e1e7e0) track, 4px padding, 4px gaps, full
 
 ### Cycle Ring (signature)
 
-An SVG ring 230–260px with a 5-unit stroke, radius 44, rotated -90°. The track is #d4ded4; the progress arc is the active mode accent with round caps, shrinking clockwise as time elapses (`stroke-dashoffset` 200ms linear, `stroke` 500ms `var(--ease-out)` on mode change). The clock sits inside at 52/60px mono semibold, with a 12px soft caption below reading the mode name. Four 6px dots under the ring show progress toward the long break (filled with the mode accent, unfilled #d4ded4, 300ms color transition) beside a 12px soft "putaran n" label. Do not add tick marks, gradients, or a second nested ring.
+An SVG ring 230–260px with a 5-unit stroke, radius 44, rotated -90°. The track is #d4ded4; the progress arc is the active mode accent with round caps, shrinking clockwise as time elapses (`stroke-dashoffset` 200ms linear, `stroke` 500ms `var(--ease-out)` on mode change). The clock sits inside at 52/60px mono semibold, with a 12px soft caption below reading the mode name. Four 6px dots under the ring show progress toward the long break (filled with the mode accent, unfilled #d4ded4, 300ms color transition) beside a 12px soft "putaran n" label. The count is focus sessions finished since the last long break — incremented the moment a focus ends, never when a break ends — so skipping a break from the mode tab cannot stall the cycle: the 4th focus always lands on Istirahat Panjang, and the count restarts at the end of that break. Do not add tick marks, gradients, or a second nested ring.
 
 ### Footer
 

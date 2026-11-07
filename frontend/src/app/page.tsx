@@ -201,7 +201,9 @@ export default function Home() {
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("focus");
-  const [round, setRound] = useState(1);
+  // Fokus yang sudah selesai pada putaran berjalan (0..LONG_BREAK_AFTER);
+  // dihitung saat fokus selesai, jadi tidak peduli istirahat dilewati lewat tab.
+  const [cycle, setCycle] = useState(0);
   const [remainingMs, setRemainingMs] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -254,7 +256,9 @@ export default function Home() {
   const advance = useCallback(() => {
     alarm();
     if (mode === "focus") {
-      const isLong = round % LONG_BREAK_AFTER === 0;
+      const done = cycle + 1;
+      const isLong = done % LONG_BREAK_AFTER === 0;
+      setCycle(done);
       const nextMode = isLong ? "long" : "short";
       load(nextMode, durations[nextMode] * 60_000);
       const session: FocusSession = {
@@ -265,10 +269,11 @@ export default function Home() {
       writeSessions([...getSessionsSnapshot(), session]);
       postSessions([session]);
     } else {
-      setRound((r) => r + 1);
+      // putaran baru hanya dimulai setelah istirahat panjang tuntas
+      setCycle((c) => (c >= LONG_BREAK_AFTER ? 0 : c));
       load("focus", durations.focus * 60_000);
     }
-  }, [alarm, mode, round, durations, load]);
+  }, [alarm, mode, cycle, durations, load]);
 
   const updateRemaining = useCallback(() => {
     const msLeft = deadlineRef.current - Date.now();
@@ -307,6 +312,8 @@ export default function Home() {
     (next: Mode) => {
       clearTicker();
       setRunning(false);
+      // keluar dari istirahat panjang lewat tab = siklus baru dimulai
+      if (next === "focus") setCycle((c) => (c >= LONG_BREAK_AFTER ? 0 : c));
       load(next, durations[next] * 60_000);
     },
     [clearTicker, load, durations],
@@ -380,9 +387,10 @@ export default function Home() {
   const circumference = 2 * Math.PI * radius;
   const activeCfg = MODE_MAP[mode];
   const modeIndex = MODES.findIndex((m) => m.key === mode);
-  // dots = completed focus sessions toward the next long break (works even
-  // when a mode is picked manually)
-  const filledDots = completed % LONG_BREAK_AFTER;
+  // dots = fokus yang selesai di putaran ini; putaran = fokus ke-n yang
+  // sedang berjalan (saat istirahat, fokus terakhir yang selesai)
+  const filledDots = cycle;
+  const putaran = mode === "focus" ? cycle + 1 : Math.max(1, cycle);
 
   return (
     <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-8 sm:py-12">
@@ -500,7 +508,7 @@ export default function Home() {
 
             <div
               className="mt-4 flex items-center gap-1.5"
-              aria-label={`Putaran ${round} dari ${LONG_BREAK_AFTER}`}
+              aria-label={`Putaran ${putaran} dari ${LONG_BREAK_AFTER}`}
             >
               {Array.from({ length: LONG_BREAK_AFTER }).map((_, i) => (
                 <span
@@ -513,7 +521,7 @@ export default function Home() {
                 />
               ))}
               <span className="ml-1.5 text-xs text-soft">
-                putaran {round}
+                putaran {putaran}
               </span>
             </div>
 
@@ -657,17 +665,49 @@ function DurationInput({
   max: number;
   onChange: (v: number) => void;
 }) {
+  const [text, setText] = useState(() => String(value));
+  const focused = useRef(false);
+
+  // Teks hanya ikut store saat field tidak fokus; selama fokus field bebas
+  // berisi (kasih hapus dulu, baru ketik angka baru).
+  useEffect(() => {
+    if (!focused.current) setText(String(value));
+  }, [value]);
+
+  const clamp = (raw: string): number | null => {
+    const n = Number(raw.trim());
+    if (raw.trim() === "" || !Number.isFinite(n)) return null;
+    return Math.min(max, Math.max(min, Math.round(n)));
+  };
+
   return (
     <label className="flex flex-col gap-1 text-xs text-soft font-medium">
       {label}
       <input
         type="number"
+        inputMode="numeric"
         min={min}
         max={max}
-        value={value}
+        value={text}
+        onFocus={() => (focused.current = true)}
         onChange={(e) => {
-          const v = Number(e.target.value);
-          if (!Number.isNaN(v)) onChange(Math.min(max, Math.max(min, v)));
+          setText(e.target.value);
+          // commit hanya angka valid; "" dibiarkan menunggu blur
+          const n = clamp(e.target.value);
+          if (n !== null && e.target.value.trim() === String(n))
+            onChange(n);
+        }}
+        onBlur={() => {
+          focused.current = false;
+          const n = clamp(text);
+          if (n === null) setText(String(value));
+          else {
+            setText(String(n));
+            if (n !== value) onChange(n);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur();
         }}
         className="rounded-[1.1rem] bg-surface-elevated px-3 py-2.5 font-mono text-sm font-semibold tabular-nums text-ink ring-1 ring-line/80 outline-none transition-shadow focus:ring-2 focus:ring-pine/50"
       />

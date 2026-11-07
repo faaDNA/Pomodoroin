@@ -1,6 +1,7 @@
 /* eslint-disable */
-// Runnable UI check: responsive overflow, settings state, timer countdown,
-// hydration after edited localStorage duration.
+// Runnable UI check: responsive overflow, settings modal (Esc), cycle that
+// must end on a long break, duration field that must stay empty while edited,
+// timer countdown, hydration after edited localStorage duration.
 // Usage: node scripts/check-responsive.js <url> [width] [height]
 const puppeteer = require("puppeteer-core");
 
@@ -59,6 +60,53 @@ const CHROME = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
     );
   }
 
+  // Sorot jam 7× lompat-lompat: putaran ke-4 harus berakhir di istirahat
+  // panjang, dan field durasi harus boleh kosong dulu sebelum diketik ulang.
+  await page.evaluate(() => {
+    const real = Date.now.bind(Date);
+    let off = 0;
+    Date.now = () => real() + off;
+    window.__jump = (ms) => (off += ms);
+  });
+  await page.click('button[aria-label="Suara"]'); // alarm mati dulu
+  const caption = () =>
+    page.$eval(
+      "div.absolute.inset-0 > span:last-child",
+      (el) => el.textContent,
+    );
+  const seq = [];
+  for (let i = 0; i < 7; i++) {
+    await page.click("[data-primary]");
+    await page.evaluate(() => window.__jump(30 * 60_000));
+    await new Promise((r) => setTimeout(r, 400));
+    seq.push(await caption());
+  }
+  const longAfterFour = seq[6] === "Istirahat Panjang";
+
+  await page.click('button[aria-haspopup="dialog"]');
+  await new Promise((r) => setTimeout(r, 350));
+  const input = await page.$("dialog[open] input");
+  await input.click();
+  await page.keyboard.down("Control");
+  await page.keyboard.press("KeyA");
+  await page.keyboard.up("Control");
+  await page.keyboard.press("Delete");
+  const fieldEmpty = await page.$eval(
+    "dialog[open] input",
+    (el) => el.value,
+  );
+  await page.keyboard.type("45");
+  await page.keyboard.press("Enter"); // Enter = blur = commit
+  await new Promise((r) => setTimeout(r, 150));
+  const edit = await page.evaluate(() => ({
+    field: document.querySelector("dialog input").value,
+    stored: JSON.parse(localStorage.getItem("pomodoroin.durations")).focus,
+  }));
+
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: "networkidle0" });
+  await new Promise((r) => setTimeout(r, 400));
+
   const clock = () => page.$eval("span.font-mono", (el) => el.textContent);
   const before = await clock();
   await page.click("button[data-primary]");
@@ -81,11 +129,17 @@ const CHROME = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
     layout,
     timer: { before, during, title },
     modal: { openedAndEscClosed: modalClosed },
+    cycle: { seq, longAfterFour },
+    edit: { fieldEmpty, ...edit },
     hydration: { afterRefresh, consoleErrors },
     ok:
       layout.scrollWidth === width &&
       layout.overflowing.length === 0 &&
       modalClosed &&
+      longAfterFour &&
+      fieldEmpty === "" &&
+      edit.field === "45" &&
+      edit.stored === 45 &&
       before !== during &&
       title.includes(during) &&
       afterRefresh === "10:00" &&
