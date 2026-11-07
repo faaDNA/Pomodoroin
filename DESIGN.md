@@ -131,7 +131,7 @@ components:
 
 Pomodoroin is a timer that sits in daylight, not in a dark room. The page is a pale sage ground (#ecefe9) with one soft white stage card floating at its center; a single blurred disc of the active mode's color blooms behind it. Nothing is sharp: every container is pill-round or near-pill, every border is a hairline or a faint ring, every shadow is wide and barely there. The mood is chill minimalism — a plant on a windowsill, a wooden clock, no chrome.
 
-The stage card is the whole product. Inside it, a three-way segmented pill chooses the mode, a 230–260px ring holds the countdown, a row of pill buttons runs it, and an inline panel discloses the duration settings. The world uses color sparingly but *locally*: the active mode tints the ring, the primary button, the brand dot, the round dots, and the ambient glow all at once, so the screen reads as one calm temperature rather than a lit dial on a black desk.
+The stage card is the whole product. Inside it, a three-way segmented pill chooses the mode, a 230–260px ring holds the countdown, a row of pill buttons runs it, and an inline panel discloses the duration settings. The world uses color sparingly but *locally*: the active mode tints the ring, the primary button, the segmented thumb, the round dots, and the ambient glow all at once, so the screen reads as one calm temperature rather than a lit dial on a black desk.
 
 Motion is quiet and fast. Everything that responds to a press resolves under 300ms; the only long-running motion is the ambient glow's 5-second breathe while the timer runs. Copy stays Indonesian, controls are named by action, and the layout is one 520px column that never grows navigation or a dashboard.
 
@@ -151,12 +151,12 @@ A light botanical palette: sage neutrals carry the surface, and one of three mut
 
 ### Primary
 
-- **Focus Pine** (#2e5d50): The default mode accent and the app's identity color. Fills the focus ring stroke, the primary button while in focus mode, the 32px brand dot, the filled round dots, and the ambient glow. Also the universal focus-visible outline (2px) and the caret/selection color in every mode.
+- **Focus Pine** (#2e5d50): The default mode accent and the app's identity color. Fills the focus ring stroke, the primary button while in focus mode, the segmented thumb, the filled round dots, and the ambient glow. Also the universal focus-visible outline (2px) and the caret/selection color in every mode.
 - **Pine Wash** (#e3ede8): Soft secondary fill associated with focus (mode `soft` value); available for tinted backgrounds at low emphasis.
 
 ### Secondary
 
-- **Break Honey** (#8c621d): Short-break accent. Paints the ring, primary button, brand dot, dots, and glow while the short break mode is active. Never used for text on the light ground.
+- **Break Honey** (#8c621d): Short-break accent. Paints the ring, primary button, segmented thumb, dots, and glow while the short break mode is active. Never used for text on the light ground.
 - **Honey Wash** (#f5ece0): Soft tandem for honey surfaces.
 - **Long-Break Iris** (#5d5691): Long-break accent, same local application as pine and honey.
 - **Iris Wash** (#eae8f5): Soft tandem for iris surfaces.
@@ -169,7 +169,7 @@ A light botanical palette: sage neutrals carry the surface, and one of three mut
 
 - **Ground** (#ecefe9): Body background, page padding, and the only surface behind the stage card.
 - **Surface** (#f9fbf8): The stage card fill and the fill of the settings trigger pill.
-- **Surface Elevated** (#ffffff): The sliding thumb of the segmented control and the fill of duration inputs — the brightest step, reserved for controls that sit *inside* another card.
+- **Surface Elevated** (#ffffff): The fill of duration inputs — the brightest step, reserved for controls that sit *inside* another card.
 - **Sunk** (#e1e7e0): The segmented control track, the secondary button fill, and the settings panel tint (`bg-sunk/50`). One step *below* surface, not above it.
 - **Ink** (#1b231f): Clock digits, wordmark, active tab label, primary readings. The shadow tint is derived from it.
 - **Soft** (#5b675f): Mode caption, footer text, panel heading, idle tab labels, small helper copy.
@@ -179,7 +179,7 @@ A light botanical palette: sage neutrals carry the surface, and one of three mut
 
 ### Named Rules
 
-**The Local Tint Rule.** The active mode accent applies as one coherent set — ring stroke, primary button, brand dot, filled dots, ambient glow — and changes together when the mode changes. Never mix two mode accents in one view, and never tint the page background or body text.
+**The Local Tint Rule.** The active mode accent applies as one coherent set — ring stroke, primary button, segmented thumb, filled dots, ambient glow — and changes together when the mode changes. Never mix two mode accents in one view, and never tint the page background or body text.
 
 **The Pine Chrome Rule.** Focus outline, caret, selection, and input focus rings stay pine (#2e5d50) in every mode. Mode color is state; pine is interaction.
 
@@ -214,7 +214,7 @@ A light botanical palette: sage neutrals carry the surface, and one of three mut
 
 One centered stage. `main` is a full-height flex center with 16px horizontal and 32px vertical padding (48px at `sm`), and holds a single column capped at 520px (`max-w-[520px]`), which enters with `rise-in`.
 
-The order is fixed: header row, stage card, footer. Header (32px brand dot + 17px wordmark left; settings pill right) has 16px bottom margin and 8px inner horizontal padding. The stage card is `rounded-[2.25rem]` (36px) with 20px padding (28px at `sm`), and stacks its contents: segmented control, 24px gap to the ring block (`pt-6`, `sm:pt-8`), ring, 16px gap to the round dots, 28px gap to the control row, then the settings panel 24px below when open. Footer sits 16px under the card with 12px horizontal padding.
+The order is fixed: header row, stage card, footer. Header (17px wordmark left; settings pill right) has 16px bottom margin and 8px inner horizontal padding. The stage card is `rounded-[2.25rem]` (36px) with 20px padding (28px at `sm`), and stacks its contents: segmented control, 24px gap to the ring block (`pt-6`, `sm:pt-8`), ring, 16px gap to the round dots, 28px gap to the control row, then the settings panel 24px below when open. Footer sits 16px under the card with 12px horizontal padding.
 
 The ring is 230px square on mobile and 260px at `sm`, drawn in a 100×100 viewBox with a 44-unit radius and a 5-unit stroke, rotated -90° so progress starts at twelve o'clock. Clock and caption are absolutely centered inside it with 8px between them.
 
@@ -242,7 +242,7 @@ The glow is the only atmospheric element: a single circle pinned to the top cent
 
 ## Shapes
 
-Softness is the form language. Pills everywhere: buttons, mode tabs, the sliding thumb, the brand dot, the settings trigger, the four progress dots, and the ring caps are all fully rounded (`9999px`). Containers step down from there — the stage card at 36px (`2.25rem`), the settings panel at 24px (`1.5rem`), duration inputs at 17.6px (`1.1rem`). There is no 0–8px corner anywhere in the product; a sharp box would read as a different app.
+Softness is the form language. Pills everywhere: buttons, mode tabs, the sliding thumb, the settings trigger, the four progress dots, and the ring caps are all fully rounded (`9999px`). Containers step down from there — the stage card at 36px (`2.25rem`), the settings panel at 24px (`1.5rem`), duration inputs at 17.6px (`1.1rem`). There is no 0–8px corner anywhere in the product; a sharp box would read as a different app.
 
 Borders are hairlines or rings, never strokes: 1px `ring-line` at 80% on the card and trigger, 50% on the settings panel, 2px pine at 50% on focused inputs, 2px pine outline on every interactive element. The ring itself is a 5-unit stroke with round caps on the progress arc and a butt-capped track of identical width beneath it; one continuous stroke, never segments.
 
@@ -272,11 +272,11 @@ Borders are hairlines or rings, never strokes: 1px `ring-line` at 80% on the car
 
 ### Navigation
 
-No persistent navigation. The only navigational element is the header row: 32px brand dot + wordmark left, one settings pill right, `justify-between`, 16px bottom margin. The settings surface is inline disclosure (`animate-panel`, 220ms) inside the stage card — never a modal, drawer, or menu.
+No persistent navigation. The only navigational element is the header row: wordmark left, one settings pill right, `justify-between`, 16px bottom margin. The settings surface is inline disclosure (`animate-panel`, 220ms) inside the stage card — never a modal, drawer, or menu.
 
 ### Mode Switcher (signature)
 
-A three-column segmented pill: sunk (#e1e7e0) track, 4px padding, 4px gaps, fully rounded. The active state is a white thumb that slides between segments (`transform`, 260ms, `var(--ease-in-out)`), with the selected label switching to 600 ink and idle labels sitting at soft that darken on hover. Labels are 12px/500, stepping to 13px at `sm`; mobile shows the short forms ("Fokus", "Singkat", "Panjang"), `sm` and up the full ones ("Istirahat Singkat", "Istirahat Panjang"). Row height is held by padding, not by `nowrap`.
+A three-column segmented pill: sunk (#e1e7e0) track, 4px padding, 4px gaps, fully rounded. The active state is a **mode-tinted thumb** — filled with the active accent (pine / honey / iris), never white — that slides between segments *and* recolors inside a single transition (`transform, background-color`, 260ms, `var(--ease-in-out)`), so position and color never drift apart. The selected label crossfades to 600 white on that accent (`color`, 160ms `var(--ease-out)`, deliberately faster than the slide: a long label fade leaves unreadable white-on-sunk frames). Idle labels sit at soft and darken on hover. Labels are 12px/500, stepping to 13px at `sm`; mobile shows the short forms ("Fokus", "Singkat", "Panjang"), `sm` and up the full ones ("Istirahat Singkat", "Istirahat Panjang"). Row height is held by padding, not by `nowrap`.
 
 ### Cycle Ring (signature)
 
@@ -291,7 +291,7 @@ One line of 12px soft text, left-aligned: total focus minutes in prose form foll
 ### Do:
 
 - **Do** keep the app to one centered 520px column: header, stage card, footer, nothing else.
-- **Do** apply the active mode accent locally and together — ring, primary button, brand dot, dots, ambient glow — and keep focus outlines and input focus rings pine in every mode.
+- **Do** apply the active mode accent locally and together — ring, primary button, segmented thumb, dots, ambient glow — and keep focus outlines and input focus rings pine in every mode.
 - **Do** use white or surface-elevated text on mode-accent fills, and ink text on light surfaces.
 - **Do** keep every corner pill-round or near-pill: 9999px controls, 36px stage, 24px panel, 17.6px inputs.
 - **Do** use JetBrains Mono `tabular-nums` for the clock and numeric inputs only.

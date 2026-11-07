@@ -388,18 +388,9 @@ export default function Home() {
 
       <div className="animate-rise relative z-10 w-full max-w-[520px] min-w-0">
         <header className="mb-4 flex items-center justify-between px-2">
-          <div className="flex items-center gap-2.5">
-            <span
-              aria-hidden
-              className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white transition-colors duration-500"
-              style={{ backgroundColor: activeCfg.accent }}
-            >
-              p
-            </span>
-            <span className="text-[17px] font-semibold tracking-tight text-ink">
-              Pomodoroin
-            </span>
-          </div>
+          <span className="text-[17px] font-semibold tracking-tight text-ink">
+            Pomodoroin
+          </span>
 
           <button
             onClick={() => setSettingsOpen((v) => !v)}
@@ -417,10 +408,13 @@ export default function Home() {
           >
             <span
               aria-hidden
-              className="absolute inset-y-1 left-1 rounded-full bg-surface-elevated shadow-xs transition-transform duration-[260ms]"
+              className="absolute inset-y-1 left-1 rounded-full shadow-xs"
               style={{
                 width: "calc((100% - 0.5rem) / 3)",
+                backgroundColor: activeCfg.accent,
                 transform: `translateX(${modeIndex * 100}%)`,
+                transitionProperty: "transform, background-color",
+                transitionDuration: "260ms",
                 transitionTimingFunction: "var(--ease-in-out)",
               }}
             />
@@ -429,8 +423,11 @@ export default function Home() {
                 key={cfg.key}
                 onClick={() => selectMode(cfg.key)}
                 aria-pressed={mode === cfg.key}
-                className={`relative z-10 min-w-0 rounded-full py-2 text-center text-xs font-medium transition-colors sm:text-[13px] ${
-                  mode === cfg.key ? "text-ink font-semibold" : "text-soft hover:text-ink"
+                style={{ transitionTimingFunction: "var(--ease-out)" }}
+                className={`relative z-10 min-w-0 rounded-full py-2 text-center text-xs font-medium transition-colors duration-[160ms] sm:text-[13px] ${
+                  mode === cfg.key
+                    ? "font-semibold text-white"
+                    : "text-soft hover:text-ink"
                 }`}
               >
                 <span className="hidden sm:inline">{cfg.label}</span>
