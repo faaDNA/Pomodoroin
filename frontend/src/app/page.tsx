@@ -405,9 +405,21 @@ export default function Home() {
           <button
             onClick={() => setSettingsOpen(true)}
             aria-haspopup="dialog"
-            className="hover-lift rounded-full bg-surface/80 px-4 py-1.5 text-xs font-medium text-soft shadow-xs ring-1 ring-line/80 backdrop-blur-md transition-colors hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+            aria-label="Pengaturan"
+            className="hover-lift grid size-9 place-items-center rounded-full bg-surface/80 text-soft shadow-xs ring-1 ring-line/80 backdrop-blur-md transition-colors hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
           >
-            Pengaturan
+            <svg
+              aria-hidden
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+            >
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
           </button>
         </header>
 
@@ -511,29 +523,63 @@ export default function Home() {
                 : `${activeCfg.label} siap`}
             </p>
 
-            <div className="mt-7 grid w-full max-w-[360px] grid-cols-2 gap-2.5 sm:flex sm:w-auto sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center sm:gap-2.5">
+            <div className="mt-7 flex w-full max-w-[360px] items-center justify-center gap-2.5 sm:max-w-none">
+              <button
+                onClick={reset}
+                aria-label="Atur ulang"
+                className="hover-lift grid size-12 shrink-0 place-items-center rounded-full bg-sunk/80 text-ink/80 hover:bg-sunk hover:text-ink active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+              >
+                <svg
+                  aria-hidden
+                  viewBox="0 0 24 24"
+                  className="h-4.5 w-4.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
+              </button>
+
               <button
                 data-primary
                 onClick={running ? pause : start}
-                className="hover-lift col-span-2 rounded-full px-7 py-3.5 text-sm font-semibold text-white shadow-xs active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine sm:col-span-1 sm:py-3"
+                className="hover-lift min-w-0 flex-1 rounded-full bg-sunk px-7 py-3.5 text-sm font-semibold text-white shadow-xs active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine sm:py-3"
                 style={{ backgroundColor: activeCfg.accent }}
               >
                 {running ? "Jeda" : "Mulai"}
               </button>
 
               <button
-                onClick={reset}
-                className="hover-lift rounded-full bg-sunk/80 px-5 py-3.5 text-sm font-medium text-ink/80 hover:bg-sunk hover:text-ink active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine sm:py-3"
-              >
-                Atur ulang
-              </button>
-
-              <button
                 onClick={() => setMuted((v) => !v)}
                 aria-pressed={muted}
-                className="hover-lift rounded-full bg-sunk/80 px-4 py-3.5 text-sm font-medium text-ink/80 hover:bg-sunk hover:text-ink active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine sm:py-3"
+                aria-label="Suara"
+                className="hover-lift grid size-12 shrink-0 place-items-center rounded-full bg-sunk/80 text-ink/80 hover:bg-sunk hover:text-ink active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
               >
-                {muted ? "Suara mati" : "Suara hidup"}
+                <svg
+                  aria-hidden
+                  viewBox="0 0 24 24"
+                  className="h-4.5 w-4.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M11 5 6 9H2v6h4l5 4z" />
+                  {muted ? (
+                    <>
+                      <path d="m17 9 4 6M21 9l-4 6" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    </>
+                  )}
+                </svg>
               </button>
             </div>
           </div>

@@ -170,7 +170,7 @@ A light botanical palette: sage neutrals carry the surface, and one of three mut
 - **Ground** (#ecefe9): Body background, page padding, and the only surface behind the stage card.
 - **Surface** (#f9fbf8): The stage card fill, the settings modal shell, and the fill of the settings trigger pill.
 - **Surface Elevated** (#ffffff): The fill of duration inputs — the brightest step, reserved for controls that sit *inside* another container.
-- **Sunk** (#e1e7e0): The segmented control track, the secondary button fill, and the modal's close pill. One step *below* surface, not above it.
+- **Sunk** (#e1e7e0): The segmented control track, the icon-button fill, and the modal's close pill. One step *below* surface, not above it.
 - **Ink** (#1b231f): Clock digits, wordmark, active tab label, primary readings. The shadow tint is derived from it — and at 32% it is the modal backdrop.
 - **Soft** (#5b675f): Mode caption, footer text, modal heading, idle tab labels, small helper copy.
 - **Muted** (#8b978e): Declared step for the quietest text and hairlines; keep below soft, never use for primary readings.
@@ -198,7 +198,7 @@ A light botanical palette: sage neutrals carry the surface, and one of three mut
 - **Display** (600, 52px → 60px at `sm`, line-height 1, tracking -0.03em, mono, `tabular-nums`): The countdown only. Digits must not jitter as the 200ms ticker updates.
 - **Title** (600, 17px, line-height 1.3, tracking -0.025em): The "Pomodoroin" wordmark.
 - **Body** (500, 14px, line-height 1.5): Modal context; `text-xs` (12px) for footer and captions.
-- **Label** (600, 14px): Primary and secondary buttons — "Mulai" / "Jeda", "Atur ulang", "Suara hidup", "Tutup".
+- **Label** (600, 14px): The two text buttons — "Mulai" / "Jeda" and "Tutup". Icon-only controls carry no visible label.
 - **Label Compact** (500, 12px → 13px at `sm`): Mode tabs and the settings trigger, with tight leading so two-word Indonesian labels wrap without changing row height.
 - **Data** (600, 14px, mono, `tabular-nums`): Duration inputs in the settings modal.
 
@@ -214,11 +214,11 @@ A light botanical palette: sage neutrals carry the surface, and one of three mut
 
 One centered stage. `main` is a full-height flex center with 16px horizontal and 32px vertical padding (48px at `sm`), and holds a single column capped at 520px (`max-w-[520px]`), which enters with `rise-in`.
 
-The order is fixed: header row, stage card, footer. Header (17px wordmark left; settings pill right) has 16px bottom margin and 8px inner horizontal padding. The stage card is `rounded-[2.25rem]` (36px) with 20px padding (28px at `sm`), and stacks its contents: segmented control, 24px gap to the ring block (`pt-6`, `sm:pt-8`), ring, 16px gap to the round dots, 28px gap to the control row. The card never changes height — settings open as a modal above it. Footer sits 16px under the card with 12px horizontal padding.
+The order is fixed: header row, stage card, footer. Header (17px wordmark left; 36px settings icon button right) has 16px bottom margin and 8px inner horizontal padding. The stage card is `rounded-[2.25rem]` (36px) with 20px padding (28px at `sm`), and stacks its contents: segmented control, 24px gap to the ring block (`pt-6`, `sm:pt-8`), ring, 16px gap to the round dots, 28px gap to the control row. The card never changes height — settings open as a modal above it. Footer sits 16px under the card with 12px horizontal padding.
 
 The ring is 230px square on mobile and 260px at `sm`, drawn in a 100×100 viewBox with a 44-unit radius and a 5-unit stroke, rotated -90° so progress starts at twelve o'clock. Clock and caption are absolutely centered inside it with 8px between them.
 
-The control row is a 2-column grid with 10px gaps on mobile (primary button spans both columns) and becomes a centered flex-wrap row with 10px gaps at `sm`. The modal's field grid is one column with 12px gaps, three columns at `sm`.
+The control row is a single centered flex row with 10px gaps at every width: a 48px circular reset button, a flexible primary pill that absorbs the leftover width (so its label stays optically centred in the card), and a 48px circular sound toggle. On mobile the row is capped at 360px; the caps disappear at `sm`. The modal's field grid is one column with 12px gaps, three columns at `sm`.
 
 Spacing follows a 4px base with only the practical steps in use: 4, 10, 12, 14, 16, 20, 24, 28, 32px. There is no grid system, no sidebar, and no breakpoint above 640px — the 520px column simply caps the width.
 
@@ -252,9 +252,9 @@ Borders are hairlines or rings, never strokes: 1px `ring-line` at 80% on the car
 ### Buttons
 
 - **Shape:** fully rounded pill (9999px), no border, micro shadow, `active:scale-[0.97]`.
-- **Primary:** mode accent fill (pine / honey / iris), white label, 14px semibold; 28px × 14px padding, 20px horizontal in the flex row at `sm`. Label reflects state: "Mulai" → "Jeda". Full width across both mobile grid columns.
-- **Secondary / Ghost:** sunk fill at 80% (`bg-sunk/80`), ink at 80% opacity, 14px medium; 20px × 14px padding ("Atur ulang"), 16px × 14px for the audible toggle. Hover solidifies to `bg-sunk` + full ink.
-- **Settings trigger:** the compact form — surface at 80% with `backdrop-blur-md`, 12px medium, 16px × 6px padding, `ring-line/80`, `shadow-xs`; fixed label "Pengaturan" with `aria-haspopup="dialog"`. It opens the modal, it does not toggle in place.
+- **Primary:** mode accent fill (pine / honey / iris), white label, 14px semibold; 28px × 14px padding, flexible width in the control row so the label sits at the card's centre line. Label reflects state: "Mulai" → "Jeda".
+- **Icon buttons:** 48px circles in the control row (reset left, mute right of the primary), sunk fill at 80% (`bg-sunk/80`), ink at 80% opacity, 18px stroke icon at 1.9 weight in `currentColor`. Hover solidifies to `bg-sunk` + full ink. Each carries an `aria-label`; the mute one is a toggle with `aria-pressed` and swaps its icon (waves ↔ a struck-out speaker).
+- **Settings trigger:** the compact icon form — 36px circle, surface at 80% with `backdrop-blur-md`, 16px stroke icon, `ring-line/80`, `shadow-xs`, `aria-label="Pengaturan"` and `aria-haspopup="dialog"`. It opens the modal, it does not toggle in place.
 - **Modal close:** the compact ghost pill — sunk at 80%, `ring-line/70`, 12px medium, label "Tutup".
 - **Hover / Focus / Active:** all state changes ride `.hover-lift` — 160ms `var(--ease-out)`, 1px upward lift on hover-capable pointers; press feedback is `scale(0.97)`. Focus-visible is a 2px pine outline in every mode.
 
@@ -307,7 +307,7 @@ One line of 12px soft text, left-aligned: total focus minutes in prose form foll
 - **Do** use JetBrains Mono `tabular-nums` for the clock and numeric inputs only.
 - **Do** keep interaction feedback ≤ 160ms via `.hover-lift` (160ms `var(--ease-out)`) and `active:scale-[0.97]`, with every state change under 300ms.
 - **Do** respect `prefers-reduced-motion`: no breathe, no rise, no modal animation, no hover lift, near-zero transitions.
-- **Do** keep all UI copy in Indonesian and label buttons by action ("Mulai", "Atur ulang", "Tutup").
+- **Do** keep all UI copy in Indonesian: text buttons read as actions ("Mulai", "Tutup"), and icon-only controls expose the same action through `aria-label` / `aria-pressed`.
 
 ### Don't:
 
@@ -317,5 +317,5 @@ One line of 12px soft text, left-aligned: total focus minutes in prose form foll
 - **Don't** use the accent colors as text on the light ground, or ink on accent fills.
 - **Don't** add animation longer than 300ms other than the 5s ambient breathe — no entrance repeats, no continuous decoration.
 - **Don't** set labels, buttons, or the wordmark in mono; don't shrink the clock below 52px to fit new content.
-- **Don't** add uppercase letter-spaced kickers, glyph icons, or a dashboard/statistics shell around the timer.
+- **Don't** add uppercase letter-spaced kickers, decorative glyph icons, or a dashboard/statistics shell around the timer. The icon set is three functional strokes and must not grow.
 - **Don't** print the long-break cycle rule as helper prose; the dots and the "putaran n" label already say it.
