@@ -1,24 +1,124 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  --font-mono: var(--font-jbmono), monospace;
+
+  --color-ground: #ecefe9;
+  --color-surface: #f9fbf8;
+  --color-surface-elevated: #ffffff;
+  --color-sunk: #e1e7e0;
+  --color-ink: #1b231f;
+  --color-soft: #5b675f;
+  --color-muted: #8b978e;
+  --color-line: #d8e0d7;
+
+  --color-pine: #2e5d50;
+  --color-pine-soft: #e3ede8;
+  --color-honey: #8c621d;
+  --color-honey-soft: #f5ece0;
+  --color-iris: #5d5691;
+  --color-iris-soft: #eae8f5;
+
+  --color-danger: #a44852;
+}
+
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 body {
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+  overflow-x: hidden;
 }
 
 ::selection {
-  background: #38bdf8;
-  color: #020617;
+  background: #2e5d50;
+  color: #f9fbf8;
 }
 
 * {
-  caret-color: #38bdf8;
-}
-
-* {
-  scrollbar-color: #334155 #020617;
+  caret-color: #2e5d50;
+  scrollbar-color: #b0beb3 transparent;
   scrollbar-width: thin;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(0.98);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.65;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-breathe {
+  animation: breathe 5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  opacity: 0.4;
+}
+
+.animate-rise {
+  animation: rise-in 360ms var(--ease-out) forwards;
+}
+
+.animate-panel {
+  animation: panel-in 220ms var(--ease-out) forwards;
+}
+
+/* Subtle micro hover lift + unified micro-interaction timing (140–170ms) */
+.hover-lift {
+  transition-property: transform, box-shadow, background-color, color;
+  transition-duration: 160ms;
+  transition-timing-function: var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift:hover {
+    transform: translateY(-1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-breathe,
+  .animate-rise,
+  .animate-panel {
+    animation: none !important;
+  }
+  .animate-breathe {
+    opacity: 0.4;
+  }
+  .hover-lift:hover {
+    transform: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }

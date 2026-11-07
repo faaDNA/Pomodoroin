@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 type Mode = "focus" | "short" | "long";
 
@@ -10,22 +16,42 @@ interface Durations {
   long: number;
 }
 
-const API = "http://localhost:8080";
+interface ModeConfig {
+  key: Mode;
+  label: string;
+  short: string;
+  accent: string;
+  soft: string;
+}
 
+const API = "http://localhost:8080";
 const DEFAULT_DURATIONS: Durations = { focus: 25, short: 5, long: 15 };
 
-const MODE_LABEL: Record<Mode, string> = {
-  focus: "Fokus",
-  short: "Istirahat Singkat",
-  long: "Istirahat Panjang",
-};
+const MODES: ModeConfig[] = [
+  {
+    key: "focus",
+    label: "Fokus",
+    short: "Fokus",
+    accent: "#2e5d50",
+    soft: "#e3ede8",
+  },
+  {
+    key: "short",
+    label: "Istirahat Singkat",
+    short: "Singkat",
+    accent: "#8c621d",
+    soft: "#f5ece0",
+  },
+  {
+    key: "long",
+    label: "Istirahat Panjang",
+    short: "Panjang",
+    accent: "#5d5691",
+    soft: "#eae8f5",
+  },
+];
 
-const MODE_STROKE: Record<Mode, string> = {
-  focus: "#38bdf8",
-  short: "#4ade80",
-  long: "#c084fc",
-};
-
+const MODE_MAP = Object.fromEntries(MODES.map((m) => [m.key, m]));
 const LONG_BREAK_AFTER = 4;
 
 const STORAGE_KEY = "pomodoroin.durations";
@@ -36,7 +62,11 @@ let cachedDurations: Durations | null = null;
 function readDurations(): Durations {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULT_DURATIONS, ...(JSON.parse(raw) as Partial<Durations>) };
+    if (raw)
+      return {
+        ...DEFAULT_DURATIONS,
+        ...(JSON.parse(raw) as Partial<Durations>),
+      };
   } catch {
     localStorage.removeItem(STORAGE_KEY);
   }
@@ -67,14 +97,14 @@ function beep(ctx: AudioContext, offset: number, freq: number) {
   const start = ctx.currentTime + offset;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
-  osc.type = "square";
+  osc.type = "sine";
   osc.frequency.value = freq;
   gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(0.2, start + 0.01);
-  gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.25);
+  gain.gain.exponentialRampToValueAtTime(0.18, start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.28);
   osc.connect(gain).connect(ctx.destination);
   osc.start(start);
-  osc.stop(start + 0.3);
+  osc.stop(start + 0.32);
 }
 
 function formatTime(ms: number): string {
@@ -85,7 +115,6 @@ function formatTime(ms: number): string {
 }
 
 export default function Home() {
-  // server snapshot = defaults, client snapshot = localStorage; React swaps them after hydration
   const durations = useSyncExternalStore(
     subscribeDurations,
     getDurationsSnapshot,
@@ -113,9 +142,9 @@ export default function Home() {
     if (!audioRef.current) audioRef.current = new AudioCtor();
     const ctx = audioRef.current;
     if (ctx.state === "suspended") void ctx.resume();
-    beep(ctx, 0, 880);
-    beep(ctx, 0.45, 880);
-    beep(ctx, 0.9, 660);
+    beep(ctx, 0, 784); // G5
+    beep(ctx, 0.35, 784);
+    beep(ctx, 0.7, 659.25); // E5
   }, [muted]);
 
   const clearTicker = useCallback(() => {
@@ -195,7 +224,6 @@ export default function Home() {
     [mode, running],
   );
 
-  // fetch config/stats on mount
   useEffect(() => {
     fetch(`${API}/api/config`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -234,173 +262,229 @@ export default function Home() {
 
   const progress =
     totalMs > 0 ? Math.min(1, Math.max(0, 1 - shownMs / totalMs)) : 0;
-  const radius = 45;
+  const radius = 44;
   const circumference = 2 * Math.PI * radius;
-  const stroke = MODE_STROKE[mode];
+  const activeCfg = MODE_MAP[mode];
+  const modeIndex = MODES.findIndex((m) => m.key === mode);
+  // dots = completed focus sessions toward the next long break (works even
+  // when a mode is picked manually)
+  const filledDots = completed % LONG_BREAK_AFTER;
 
   return (
-    <main className="flex min-h-screen w-full items-center justify-center px-4 py-8">
-      <div className="w-full max-w-2xl min-w-0 space-y-8">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+    <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-8 sm:py-12">
+      {/* Ambient soft glow background container */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className={`absolute -top-32 left-1/2 h-[380px] w-[380px] -translate-x-1/2 rounded-full blur-[100px] transition-colors duration-700 ${
+            running ? "animate-breathe" : "opacity-35"
+          }`}
+          style={{ backgroundColor: activeCfg.accent }}
+        />
+      </div>
+
+      <div className="animate-rise relative z-10 w-full max-w-[520px] min-w-0">
+        <header className="mb-4 flex items-center justify-between px-2">
+          <div className="flex items-center gap-2.5">
             <span
               aria-hidden
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-400 text-lg font-bold text-slate-950"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white transition-colors duration-500"
+              style={{ backgroundColor: activeCfg.accent }}
             >
-              P
+              p
             </span>
-            <span className="text-lg font-semibold tracking-tight">
+            <span className="text-[17px] font-semibold tracking-tight text-ink">
               Pomodoroin
             </span>
           </div>
+
           <button
             onClick={() => setSettingsOpen((v) => !v)}
             aria-expanded={settingsOpen}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300 transition hover:border-slate-500 hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400"
+            className="hover-lift rounded-full bg-surface/80 px-4 py-1.5 text-xs font-medium text-soft shadow-xs ring-1 ring-line/80 backdrop-blur-md transition-colors hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
           >
-            {settingsOpen ? "Tutup pengaturan" : "Pengaturan"}
+            {settingsOpen ? "Tutup" : "Pengaturan"}
           </button>
         </header>
 
-        <nav className="grid grid-cols-3 gap-2" aria-label="Mode timer">
-          {(Object.keys(MODE_LABEL) as Mode[]).map((key) => (
-            <button
-              key={key}
-              onClick={() => selectMode(key)}
-              aria-pressed={mode === key}
-              className={`min-w-0 rounded-lg px-1 py-2 text-[13px] leading-tight font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400 sm:px-3 sm:text-sm ${
-                mode === key
-                  ? "bg-sky-400 text-slate-950"
-                  : "bg-slate-900 text-slate-300 hover:bg-slate-800"
-              }`}
-            >
-              {MODE_LABEL[key]}
-            </button>
-          ))}
-        </nav>
-
-        <section className="flex flex-col items-center gap-7">
-          <div className="relative">
-            <svg viewBox="0 0 100 100" className="h-60 w-60 sm:h-72 sm:w-72">
-              <circle
-                cx="50"
-                cy="50"
-                r={radius}
-                fill="none"
-                stroke="#1e293b"
-                strokeWidth="4"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r={radius}
-                fill="none"
-                stroke={stroke}
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                strokeDashoffset={circumference * (1 - progress)}
-                transform="rotate(-90 50 50)"
-                style={{ transition: "stroke-dashoffset 200ms linear" }}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <span
-                className="font-mono text-5xl font-bold tabular-nums tracking-tight sm:text-6xl"
-                aria-live="off"
+        <section className="rounded-[2.25rem] bg-surface p-5 shadow-[0_20px_50px_-20px_rgba(27,35,31,0.08)] ring-1 ring-line/80 sm:p-7">
+          <nav
+            className="relative grid grid-cols-3 gap-1 rounded-full bg-sunk p-1"
+            aria-label="Mode timer"
+          >
+            <span
+              aria-hidden
+              className="absolute inset-y-1 left-1 rounded-full bg-surface-elevated shadow-xs transition-transform duration-[260ms]"
+              style={{
+                width: "calc((100% - 0.5rem) / 3)",
+                transform: `translateX(${modeIndex * 100}%)`,
+                transitionTimingFunction: "var(--ease-in-out)",
+              }}
+            />
+            {MODES.map((cfg) => (
+              <button
+                key={cfg.key}
+                onClick={() => selectMode(cfg.key)}
+                aria-pressed={mode === cfg.key}
+                className={`relative z-10 min-w-0 rounded-full py-2 text-center text-xs font-medium transition-colors sm:text-[13px] ${
+                  mode === cfg.key ? "text-ink font-semibold" : "text-soft hover:text-ink"
+                }`}
               >
-                {formatTime(shownMs)}
+                <span className="hidden sm:inline">{cfg.label}</span>
+                <span className="sm:hidden">{cfg.short}</span>
+              </button>
+            ))}
+          </nav>
+
+          <div className="flex flex-col items-center pt-6 sm:pt-8">
+            <div className="relative flex h-[230px] w-[230px] items-center justify-center sm:h-[260px] sm:w-[260px]">
+              <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="none"
+                  stroke="#d4ded4"
+                  strokeWidth="5"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="none"
+                  stroke={activeCfg.accent}
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={circumference * (1 - progress)}
+                  style={{
+                    transition:
+                      "stroke-dashoffset 200ms linear, stroke 500ms var(--ease-out)",
+                  }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span
+                  className="font-mono text-[52px] font-semibold tabular-nums tracking-[-0.03em] leading-none text-ink sm:text-[60px]"
+                  aria-live="off"
+                >
+                  {formatTime(shownMs)}
+                </span>
+                <span className="mt-2 text-xs font-medium text-soft">
+                  {activeCfg.label}
+                </span>
+              </div>
+            </div>
+
+            <div
+              className="mt-4 flex items-center gap-1.5"
+              aria-label={`Putaran ${round} dari ${LONG_BREAK_AFTER}`}
+            >
+              {Array.from({ length: LONG_BREAK_AFTER }).map((_, i) => (
+                <span
+                  key={i}
+                  className="h-1.5 w-1.5 rounded-full transition-colors duration-300"
+                  style={{
+                    backgroundColor:
+                      i < filledDots ? activeCfg.accent : "#d4ded4",
+                  }}
+                />
+              ))}
+              <span className="ml-1.5 text-xs text-soft">
+                putaran {round}
               </span>
-              <span className="text-sm text-slate-400">
-                {MODE_LABEL[mode]} · putaran {round}
-              </span>
+            </div>
+
+            <p className="sr-only" aria-live="polite">
+              {running
+                ? `${formatTime(shownMs)} tersisa`
+                : `${activeCfg.label} siap`}
+            </p>
+
+            <div className="mt-7 grid w-full max-w-[360px] grid-cols-2 gap-2.5 sm:flex sm:w-auto sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center sm:gap-2.5">
+              <button
+                data-primary
+                onClick={running ? pause : start}
+                className="hover-lift col-span-2 rounded-full px-7 py-3.5 text-sm font-semibold text-white shadow-xs active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine sm:col-span-1 sm:py-3"
+                style={{ backgroundColor: activeCfg.accent }}
+              >
+                {running ? "Jeda" : "Mulai"}
+              </button>
+
+              <button
+                onClick={reset}
+                className="hover-lift rounded-full bg-sunk/80 px-5 py-3.5 text-sm font-medium text-ink/80 hover:bg-sunk hover:text-ink active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine sm:py-3"
+              >
+                Atur ulang
+              </button>
+
+              <button
+                onClick={() => setMuted((v) => !v)}
+                aria-pressed={muted}
+                className="hover-lift rounded-full bg-sunk/80 px-4 py-3.5 text-sm font-medium text-ink/80 hover:bg-sunk hover:text-ink active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine sm:py-3"
+              >
+                {muted ? "Suara mati" : "Suara hidup"}
+              </button>
             </div>
           </div>
 
-          <p className="sr-only" aria-live="polite">
-            {running
-              ? `${formatTime(shownMs)} tersisa`
-              : `${MODE_LABEL[mode]} siap`}
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
-            <button
-              onClick={running ? pause : start}
-              className="rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300 sm:px-6 sm:py-3 sm:text-base"
+          {settingsOpen && (
+            <section
+              className="animate-panel mt-6 rounded-[1.5rem] bg-sunk/50 p-4 sm:p-5 ring-1 ring-line/50"
+              aria-label="Pengaturan durasi"
             >
-              {running ? "Jeda" : "Mulai"}
-            </button>
-            <button
-              onClick={reset}
-              className="rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400 sm:px-6 sm:py-3 sm:text-base"
-            >
-              Atur ulang
-            </button>
-            <button
-              onClick={() => setMuted((v) => !v)}
-              aria-pressed={muted}
-              className="rounded-lg border border-slate-700 px-3.5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400 sm:px-5 sm:py-3 sm:text-base"
-            >
-              {muted ? "Suara mati" : "Suara hidup"}
-            </button>
-          </div>
+              <h2 className="mb-3 text-xs font-semibold text-soft">
+                Durasi sesi (menit)
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <DurationInput
+                  label="Fokus"
+                  value={durations.focus}
+                  min={1}
+                  max={90}
+                  onChange={(v) => changeDuration("focus", v)}
+                />
+                <DurationInput
+                  label="Istirahat singkat"
+                  value={durations.short}
+                  min={1}
+                  max={30}
+                  onChange={(v) => changeDuration("short", v)}
+                />
+                <DurationInput
+                  label="Istirahat panjang"
+                  value={durations.long}
+                  min={1}
+                  max={60}
+                  onChange={(v) => changeDuration("long", v)}
+                />
+              </div>
+              <p className="mt-3 text-xs text-soft">
+                Istirahat panjang otomatis setiap {LONG_BREAK_AFTER} sesi fokus.
+              </p>
+            </section>
+          )}
         </section>
 
-        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-4 text-sm text-slate-400">
+        <footer className="mt-4 flex flex-wrap items-center justify-between gap-2 px-3 text-xs text-soft">
           <span>{completed} sesi fokus selesai</span>
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-1.5">
             <span
               aria-hidden
               className={`h-2 w-2 rounded-full ${
                 backendUp === null
-                  ? "bg-slate-500"
+                  ? "bg-soft"
                   : backendUp
-                    ? "bg-emerald-400"
-                    : "bg-rose-400"
+                    ? "bg-[#2e5d50]"
+                    : "bg-danger"
               }`}
             />
             {backendUp === null
               ? "Memeriksa backend…"
               : backendUp
                 ? "Backend terhubung"
-                : "Backend offline, jalan lokal"}
+                : "Backend offline (lokal)"}
           </span>
         </footer>
-
-        {settingsOpen && (
-          <section
-            className="rounded-2xl border border-slate-800 bg-slate-900 p-5"
-            aria-label="Pengaturan durasi"
-          >
-            <h2 className="mb-4 font-semibold">Durasi tiap sesi</h2>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <DurationInput
-                label="Fokus"
-                value={durations.focus}
-                min={1}
-                max={90}
-                onChange={(v) => changeDuration("focus", v)}
-              />
-              <DurationInput
-                label="Istirahat singkat"
-                value={durations.short}
-                min={1}
-                max={30}
-                onChange={(v) => changeDuration("short", v)}
-              />
-              <DurationInput
-                label="Istirahat panjang"
-                value={durations.long}
-                min={1}
-                max={60}
-                onChange={(v) => changeDuration("long", v)}
-              />
-            </div>
-            <p className="mt-4 text-sm text-slate-400">
-              Istirahat panjang otomatis setelah {LONG_BREAK_AFTER} sesi fokus.
-            </p>
-          </section>
-        )}
       </div>
     </main>
   );
@@ -420,8 +504,8 @@ function DurationInput({
   onChange: (v: number) => void;
 }) {
   return (
-    <label className="flex flex-col gap-1.5 text-sm text-slate-400">
-      {label} (menit)
+    <label className="flex flex-col gap-1 text-xs text-soft font-medium">
+      {label}
       <input
         type="number"
         min={min}
@@ -431,7 +515,7 @@ function DurationInput({
           const v = Number(e.target.value);
           if (!Number.isNaN(v)) onChange(Math.min(max, Math.max(min, v)));
         }}
-        className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-base tabular-nums text-slate-100 placeholder:text-slate-500 hover:border-slate-600 focus:border-sky-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400"
+        className="rounded-[1.1rem] bg-surface-elevated px-3 py-2.5 font-mono text-sm font-semibold tabular-nums text-ink ring-1 ring-line/80 outline-none transition-shadow focus:ring-2 focus:ring-pine/50"
       />
     </label>
   );

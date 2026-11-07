@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const sans = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const mono = JetBrains_Mono({
+  variable: "--font-jbmono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Pomodoroin — Simple Pomodoro Timer",
-  description: "Minimalist Pomodoro timer built with Next.js and Spring Boot.",
+  title: "Pomodoroin — Chill Minimalist Pomodoro Timer",
+  description: "Modern & chill Pomodoro timer built with Next.js and Spring Boot.",
 };
 
 export default function RootLayout({
@@ -25,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-slate-100 min-h-screen`}
+        className={`${sans.variable} ${mono.variable} font-sans antialiased min-h-screen`}
       >
         {children}
       </body>

@@ -56,7 +56,7 @@ const CHROME = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 
   const clock = () => page.$eval("span.font-mono", (el) => el.textContent);
   const before = await clock();
-  await page.click("button.bg-emerald-500");
+  await page.click("button[data-primary]");
   await new Promise((r) => setTimeout(r, 2600));
   const during = await clock();
   const title = await page.title();
