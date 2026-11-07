@@ -213,6 +213,16 @@ export default function Home() {
   const deadlineRef = useRef(0);
   const tickerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
+  const settingsRef = useRef<HTMLDialogElement | null>(null);
+
+  // <dialog>(showModal/close) diatur dari state; native menangani Esc, focus
+  // trap, dan pengembalian fokus ke trigger.
+  useEffect(() => {
+    const el = settingsRef.current;
+    if (!el) return;
+    if (settingsOpen && !el.open) el.showModal();
+    if (!settingsOpen && el.open) el.close();
+  }, [settingsOpen]);
 
   const alarm = useCallback(() => {
     if (muted) return;
@@ -393,11 +403,11 @@ export default function Home() {
           </span>
 
           <button
-            onClick={() => setSettingsOpen((v) => !v)}
-            aria-expanded={settingsOpen}
+            onClick={() => setSettingsOpen(true)}
+            aria-haspopup="dialog"
             className="hover-lift rounded-full bg-surface/80 px-4 py-1.5 text-xs font-medium text-soft shadow-xs ring-1 ring-line/80 backdrop-blur-md transition-colors hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
           >
-            {settingsOpen ? "Tutup" : "Pengaturan"}
+            Pengaturan
           </button>
         </header>
 
@@ -528,43 +538,55 @@ export default function Home() {
             </div>
           </div>
 
-          {settingsOpen && (
-            <section
-              className="animate-panel mt-6 rounded-[1.5rem] bg-sunk/50 p-4 sm:p-5 ring-1 ring-line/50"
-              aria-label="Pengaturan durasi"
+          </section>
+
+        <dialog
+          ref={settingsRef}
+          aria-labelledby="settings-title"
+          onClose={() => setSettingsOpen(false)}
+          onClick={(e) => {
+            // klik backdrop (area dialog di luar insert) = tutup
+            if (e.target === settingsRef.current) setSettingsOpen(false);
+          }}
+          className="settings-modal m-auto w-[calc(100%-2rem)] max-w-[440px] rounded-[1.5rem] bg-surface p-5 shadow-[0_30px_70px_-24px_rgba(27,35,31,0.3)] ring-1 ring-line/80 outline-none sm:p-6"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="settings-title" className="text-sm font-semibold text-ink">
+              Durasi sesi (menit)
+            </h2>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(false)}
+              className="hover-lift rounded-full bg-sunk/80 px-4 py-1.5 text-xs font-medium text-ink/80 ring-1 ring-line/70 hover:bg-sunk hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
             >
-              <h2 className="mb-3 text-xs font-semibold text-soft">
-                Durasi sesi (menit)
-              </h2>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <DurationInput
-                  label="Fokus"
-                  value={durations.focus}
-                  min={1}
-                  max={90}
-                  onChange={(v) => changeDuration("focus", v)}
-                />
-                <DurationInput
-                  label="Istirahat singkat"
-                  value={durations.short}
-                  min={1}
-                  max={30}
-                  onChange={(v) => changeDuration("short", v)}
-                />
-                <DurationInput
-                  label="Istirahat panjang"
-                  value={durations.long}
-                  min={1}
-                  max={60}
-                  onChange={(v) => changeDuration("long", v)}
-                />
-              </div>
-              <p className="mt-3 text-xs text-soft">
-                Istirahat panjang otomatis setiap {LONG_BREAK_AFTER} sesi fokus.
-              </p>
-            </section>
-          )}
-        </section>
+              Tutup
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <DurationInput
+              label="Fokus"
+              value={durations.focus}
+              min={1}
+              max={90}
+              onChange={(v) => changeDuration("focus", v)}
+            />
+            <DurationInput
+              label="Istirahat singkat"
+              value={durations.short}
+              min={1}
+              max={30}
+              onChange={(v) => changeDuration("short", v)}
+            />
+            <DurationInput
+              label="Istirahat panjang"
+              value={durations.long}
+              min={1}
+              max={60}
+              onChange={(v) => changeDuration("long", v)}
+            />
+          </div>
+        </dialog>
 
         <footer className="mt-4 px-3 text-xs text-soft">
           <span>

@@ -57,7 +57,7 @@ cd frontend; npm run build          # build produksi
 cd frontend; npm run check:ui       # butuh app jalan di :3000
 ```
 
-`check:ui` memakai Chrome + puppeteer-core: cek overflow responsif di 390px, state panel pengaturan, timer berjalan (25:00 → detik berkurang), judul tab, dan hydration setelah durasi diubah lalu refresh. Screenshot tersimpan di `.impeccable/review/`.
+`check:ui` memakai Chrome + puppeteer-core: cek overflow responsif di 390px, modal pengaturan (buka via tombol, tutup via Esc), timer berjalan (25:00 → detik berkurang), judul tab, dan hydration setelah durasi diubah lalu refresh. Screenshot tersimpan di `.impeccable/review/`.
 
 ## Struktur singkat
 

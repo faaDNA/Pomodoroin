@@ -68,14 +68,45 @@ body {
   }
 }
 
-@keyframes panel-in {
-  from {
+/* Settings modal — native <dialog> in the top layer. The discrete
+   display/overlay swap needs allow-discrete so the exit can animate. */
+.settings-modal {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 180ms var(--ease-out),
+    display 180ms allow-discrete,
+    overlay 180ms allow-discrete;
+}
+
+.settings-modal[open] {
+  opacity: 1;
+  transform: none;
+}
+
+@starting-style {
+  .settings-modal[open] {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(10px) scale(0.98);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+}
+
+.settings-modal::backdrop {
+  background-color: rgb(27 35 31 / 0);
+  transition:
+    background-color 180ms var(--ease-out),
+    display 180ms allow-discrete,
+    overlay 180ms allow-discrete;
+}
+
+.settings-modal[open]::backdrop {
+  background-color: rgb(27 35 31 / 0.32);
+}
+
+@starting-style {
+  .settings-modal[open]::backdrop {
+    background-color: rgb(27 35 31 / 0);
   }
 }
 
@@ -86,10 +117,6 @@ body {
 
 .animate-rise {
   animation: rise-in 360ms var(--ease-out) forwards;
-}
-
-.animate-panel {
-  animation: panel-in 220ms var(--ease-out) forwards;
 }
 
 /* Subtle micro hover lift + unified micro-interaction timing (140–170ms) */
@@ -106,8 +133,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-breathe,
-  .animate-rise,
-  .animate-panel {
+  .animate-rise {
     animation: none !important;
   }
   .animate-breathe {
@@ -118,7 +144,8 @@ body {
   }
   *,
   *::before,
-  *::after {
+  *::after,
+  .settings-modal::backdrop {
     transition-duration: 0.01ms !important;
   }
 }

@@ -43,15 +43,20 @@ const CHROME = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
     fullPage: true,
   });
 
-  const settingsBtn = await page.$("button[aria-expanded]");
+  const settingsBtn = await page.$('button[aria-haspopup="dialog"]');
+  let modalClosed = false;
   if (settingsBtn) {
     await settingsBtn.click();
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 350));
     await page.screenshot({
       path: `../.impeccable/review/width-${width}-settings.png`,
       fullPage: true,
     });
-    await settingsBtn.click();
+    await page.keyboard.press("Escape");
+    await new Promise((r) => setTimeout(r, 350));
+    modalClosed = await page.evaluate(
+      () => !document.querySelector("dialog[open]"),
+    );
   }
 
   const clock = () => page.$eval("span.font-mono", (el) => el.textContent);
@@ -75,10 +80,12 @@ const CHROME = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
   const report = {
     layout,
     timer: { before, during, title },
+    modal: { openedAndEscClosed: modalClosed },
     hydration: { afterRefresh, consoleErrors },
     ok:
       layout.scrollWidth === width &&
       layout.overflowing.length === 0 &&
+      modalClosed &&
       before !== during &&
       title.includes(during) &&
       afterRefresh === "10:00" &&
