@@ -163,7 +163,7 @@ A light botanical palette: sage neutrals carry the surface, and one of three mut
 
 ### Tertiary
 
-- **Alarm Clay** (#a44852): The "backend offline" footer dot and nothing else. It is not a form-error or destructive-action color; there are none.
+- **Alarm Clay** (#a44852): Reserved for error and destructive-action states. Currently unused in the UI — there are none yet.
 
 ### Neutral
 
@@ -284,7 +284,7 @@ An SVG ring 230–260px with a 5-unit stroke, radius 44, rotated -90°. The trac
 
 ### Footer
 
-12px soft text on both ends, wrapping at narrow widths: completed focus sessions on the left; a 8px status dot plus backend state on the right (soft = checking, pine #2e5d50 = connected, danger #a44852 = offline).
+One line of 12px soft text, left-aligned: total focus minutes in prose form followed by the session count — e.g. `50 menit fokus · 2 sesi`, `1 jam 15 menit fokus · 3 sesi`. No status indicators or colour: the backend is an implementation detail, never shown to the user. Wrapped as a single line so it can't break; the colon-separated groups are part of one sentence.
 
 ## Do's and Don'ts
 

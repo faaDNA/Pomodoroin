@@ -1,6 +1,6 @@
 # Pomodoroin
 
-Pomodoro timer sederhana tanpa login dan tanpa database. Timer fokus/istirahat, durasi kustom, alarm saat sesi habis, penghitung sesi. Data durasi disimpan di `localStorage` browser; backend Spring Boot hanya menyediakan konfigurasi default dan penghitung sesi in-memory.
+Pomodoro timer sederhana tanpa login dan tanpa database. Timer fokus/istirahat, durasi kustom, alarm saat sesi habis, dan total menit fokus yang sudah diselesaikan (mis. 25 + 25 menit → "50 menit fokus"). Data durasi dan riwayat sesi disimpan di `localStorage` browser; backend Spring Boot hanya menyediakan konfigurasi default dan salinan total menit secara in-memory.
 
 ```
 backend/    Spring Boot 3.3 (Java 17, Maven wrapper)
@@ -35,23 +35,23 @@ npm run dev
 
 Buka http://localhost:3000.
 
-Backend boleh mati — app tetap jalan penuh secara lokal, status di footer berubah jadi "Backend offline, jalan lokal".
+Backend boleh mati — app tetap jalan penuh secara lokal.
 
 ## API
 
-| Method | Path                  | Keterangan                                       |
-| ------ | --------------------- | ------------------------------------------------ |
-| GET    | `/api/health`         | cek status                                        |
-| GET    | `/api/config`         | durasi default (menit)                            |
-| GET    | `/api/stats`          | `{ completed }` sesi fokus selesai                |
-| POST   | `/api/stats/complete` | tambah 1 sesi selesai                             |
+| Method | Path                  | Keterangan                                                 |
+| ------ | --------------------- | ---------------------------------------------------------- |
+| GET    | `/api/health`         | cek status                                                 |
+| GET    | `/api/config`         | durasi default (menit)                                     |
+| GET    | `/api/stats`          | `{ completed, totalMinutes }` total sesi & menit fokus     |
+| POST   | `/api/stats/sessions` | `{ sessions: [{ id, minutes }] }` simpan sesi (idempotent) |
 
 CORS hanya mengizinkan `http://localhost:3000`. Ganti port frontend → ubah `WebConfig.java`.
 
 ## Test & cek
 
 ```powershell
-cd backend;  .\mvnw.cmd test        # MockMvc, endpoint /api/health
+cd backend;  .\mvnw.cmd test        # MockMvc: health, config, akumulasi total menit
 cd frontend; npm run lint           # eslint
 cd frontend; npm run build          # build produksi
 cd frontend; npm run check:ui       # butuh app jalan di :3000
@@ -61,7 +61,7 @@ cd frontend; npm run check:ui       # butuh app jalan di :3000
 
 ## Struktur singkat
 
-- `frontend/src/app/page.tsx` — seluruh UI + logika timer (client component). Duras alat disimpan lewat `useSyncExternalStore` agar aman dari hydration mismatch; alarm memakai Web Audio API.
+- `frontend/src/app/page.tsx` — seluruh UI + logika timer (client component). Durasi dan riwayat sesi fokus disimpan lewat `useSyncExternalStore` agar aman dari hydration mismatch; alarm memakai Web Audio API.
 - `frontend/src/app/layout.tsx`, `globals.css` — font Geist/Geist Mono, ground gelap.
 - `backend/src/main/java/com/pomodoroin/backend/PomodoroController.java` — endpoint REST.
 - `backend/src/main/java/com/pomodoroin/backend/WebConfig.java` — CORS.
@@ -69,6 +69,6 @@ cd frontend; npm run check:ui       # butuh app jalan di :3000
 
 ## Catatan
 
-- Penghitung sesi di backend hilang saat restart (in-memory, tanpa database).
-- Kunci `localStorage`: `pomodoroin.durations`.
+- Total menit di backend hilang saat restart (in-memory, tanpa database); frontend otomatis mereplay sesi lokal saat backend terhubung kembali.
+- Kunci `localStorage`: `pomodoroin.durations` (durasi) dan `pomodoroin.sessions` (riwayat sesi fokus).
 - Ganti nama produk? Cari `Pomodoroin`/`pomodoroin` di `frontend/src`, `backend/`, dan dokumen.

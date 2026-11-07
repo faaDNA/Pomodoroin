@@ -56,6 +56,17 @@ const LONG_BREAK_AFTER = 4;
 
 const STORAGE_KEY = "pomodoroin.durations";
 const CHANGED = "pomodoroin:durations-changed";
+const SESSIONS_KEY = "pomodoroin.sessions";
+const SESSIONS_CHANGED = "pomodoroin:sessions-changed";
+const MAX_SESSIONS = 5000;
+
+interface FocusSession {
+  id: string;
+  minutes: number;
+  at: number;
+}
+
+const EMPTY_SESSIONS: FocusSession[] = [];
 
 let cachedDurations: Durations | null = null;
 
@@ -93,6 +104,69 @@ function writeDurations(next: Durations): void {
   window.dispatchEvent(new Event(CHANGED));
 }
 
+let cachedSessions: FocusSession[] | null = null;
+
+function readSessions(): FocusSession[] {
+  try {
+    const raw = localStorage.getItem(SESSIONS_KEY);
+    if (!raw) return EMPTY_SESSIONS;
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return EMPTY_SESSIONS;
+    return parsed.filter(
+      (s): s is FocusSession =>
+        typeof s === "object" &&
+        s !== null &&
+        typeof (s as FocusSession).id === "string" &&
+        (s as FocusSession).id.length > 0 &&
+        Number.isFinite((s as FocusSession).minutes) &&
+        (s as FocusSession).minutes > 0,
+    );
+  } catch {
+    localStorage.removeItem(SESSIONS_KEY);
+    return EMPTY_SESSIONS;
+  }
+}
+
+function subscribeSessions(cb: () => void): () => void {
+  window.addEventListener("storage", cb);
+  window.addEventListener(SESSIONS_CHANGED, cb);
+  return () => {
+    window.removeEventListener("storage", cb);
+    window.removeEventListener(SESSIONS_CHANGED, cb);
+  };
+}
+
+function getSessionsSnapshot(): FocusSession[] {
+  cachedSessions ??= readSessions();
+  return cachedSessions;
+}
+
+function writeSessions(next: FocusSession[]): void {
+  cachedSessions = next.slice(-MAX_SESSIONS);
+  localStorage.setItem(SESSIONS_KEY, JSON.stringify(cachedSessions));
+  window.dispatchEvent(new Event(SESSIONS_CHANGED));
+}
+
+// Fire-and-forget: app tetap jalan penuh saat backend mati. Idempotent per id,
+// jadi aman dikirim ulang (replay saat mount memulihkan server setelah restart).
+function postSessions(sessions: FocusSession[]): void {
+  if (sessions.length === 0) return;
+  void fetch(`${API}/api/stats/sessions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sessions: sessions.map((s) => ({ id: s.id, minutes: s.minutes })),
+    }),
+  }).catch(() => {});
+}
+
+function formatTotal(minutes: number): string {
+  if (minutes < 60) return `${minutes} menit`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m === 0 ? `${h} jam` : `${h} jam ${m} menit`;
+}
+
 function beep(ctx: AudioContext, offset: number, freq: number) {
   const start = ctx.currentTime + offset;
   const osc = ctx.createOscillator();
@@ -120,14 +194,21 @@ export default function Home() {
     getDurationsSnapshot,
     () => DEFAULT_DURATIONS,
   );
+  const localSessions = useSyncExternalStore(
+    subscribeSessions,
+    getSessionsSnapshot,
+    () => EMPTY_SESSIONS,
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("focus");
   const [round, setRound] = useState(1);
   const [remainingMs, setRemainingMs] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
   const [muted, setMuted] = useState(false);
-  const [completed, setCompleted] = useState(0);
-  const [backendUp, setBackendUp] = useState<boolean | null>(null);
+  const [serverStats, setServerStats] = useState<{
+    completed: number;
+    totalMinutes: number;
+  } | null>(null);
 
   const deadlineRef = useRef(0);
   const tickerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -166,8 +247,13 @@ export default function Home() {
       const isLong = round % LONG_BREAK_AFTER === 0;
       const nextMode = isLong ? "long" : "short";
       load(nextMode, durations[nextMode] * 60_000);
-      setCompleted((c) => c + 1);
-      void fetch(`${API}/api/stats/complete`, { method: "POST" }).catch(() => {});
+      const session: FocusSession = {
+        id: crypto.randomUUID(),
+        minutes: durations.focus,
+        at: Date.now(),
+      };
+      writeSessions([...getSessionsSnapshot(), session]);
+      postSessions([session]);
     } else {
       setRound((r) => r + 1);
       load("focus", durations.focus * 60_000);
@@ -240,16 +326,34 @@ export default function Home() {
               long: cfg.longBreakMinutes,
             });
           }
-          setBackendUp(true);
         },
       )
-      .catch(() => setBackendUp(false));
+      .catch(() => {});
 
+    const local = getSessionsSnapshot();
     fetch(`${API}/api/stats`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d: { completed: number }) => setCompleted(d.completed))
+      .then((d: { completed: number; totalMinutes: number }) => {
+        setServerStats(d);
+        // Replay idempotent: pulihkan server setelah restart / saat offline.
+        if (local.length > d.completed) postSessions(local);
+      })
       .catch(() => {});
   }, []);
+
+  // localStorage = sumber tampilan; server hanya cadangan saat storage bersih.
+  const localTotalMinutes = localSessions.reduce(
+    (sum, s) => sum + s.minutes,
+    0,
+  );
+  const totalMinutes = Math.max(
+    localTotalMinutes,
+    serverStats?.totalMinutes ?? 0,
+  );
+  const completed = Math.max(
+    localSessions.length,
+    serverStats?.completed ?? 0,
+  );
 
   const totalMs = durations[mode] * 60_000;
   const shownMs = remainingMs ?? totalMs;
@@ -465,24 +569,9 @@ export default function Home() {
           )}
         </section>
 
-        <footer className="mt-4 flex flex-wrap items-center justify-between gap-2 px-3 text-xs text-soft">
-          <span>{completed} sesi fokus selesai</span>
-          <span className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className={`h-2 w-2 rounded-full ${
-                backendUp === null
-                  ? "bg-soft"
-                  : backendUp
-                    ? "bg-[#2e5d50]"
-                    : "bg-danger"
-              }`}
-            />
-            {backendUp === null
-              ? "Memeriksa backend…"
-              : backendUp
-                ? "Backend terhubung"
-                : "Backend offline (lokal)"}
+        <footer className="mt-4 px-3 text-xs text-soft">
+          <span>
+            {formatTotal(totalMinutes)} fokus · {completed} sesi
           </span>
         </footer>
       </div>
