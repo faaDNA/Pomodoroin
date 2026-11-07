@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Podomoroin — Simple Pomodoro Timer",
+  title: "Pomodoroin — Simple Pomodoro Timer",
   description: "Minimalist Pomodoro timer built with Next.js and Spring Boot.",
 };
 

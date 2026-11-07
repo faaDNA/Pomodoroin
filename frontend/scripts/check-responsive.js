@@ -64,7 +64,7 @@ const CHROME = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
   // bug repro: edited duration must hydrate cleanly and show the stored value
   await page.evaluate(() =>
     localStorage.setItem(
-      "podomoroin.durations",
+      "pomodoroin.durations",
       JSON.stringify({ focus: 10, short: 5, long: 15 }),
     ),
   );

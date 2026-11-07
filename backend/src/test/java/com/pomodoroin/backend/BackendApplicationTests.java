@@ -1,4 +1,4 @@
-package com.podomoroin.backend;
+package com.pomodoroin.backend;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

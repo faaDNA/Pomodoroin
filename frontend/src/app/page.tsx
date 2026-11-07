@@ -28,8 +28,8 @@ const MODE_STROKE: Record<Mode, string> = {
 
 const LONG_BREAK_AFTER = 4;
 
-const STORAGE_KEY = "podomoroin.durations";
-const CHANGED = "podomoroin:durations-changed";
+const STORAGE_KEY = "pomodoroin.durations";
+const CHANGED = "pomodoroin:durations-changed";
 
 let cachedDurations: Durations | null = null;
 
@@ -227,7 +227,7 @@ export default function Home() {
   const shownMs = remainingMs ?? totalMs;
 
   useEffect(() => {
-    document.title = `${formatTime(shownMs)} — Podomoroin`;
+    document.title = `${formatTime(shownMs)} — Pomodoroin`;
   }, [shownMs]);
 
   useEffect(() => clearTicker, [clearTicker]);
@@ -250,7 +250,7 @@ export default function Home() {
               P
             </span>
             <span className="text-lg font-semibold tracking-tight">
-              Podomoroin
+              Pomodoroin
             </span>
           </div>
           <button

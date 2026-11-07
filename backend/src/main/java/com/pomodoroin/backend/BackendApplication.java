@@ -1,4 +1,4 @@
-package com.podomoroin.backend;
+package com.pomodoroin.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -8,11 +8,11 @@
 		<version>3.3.4</version>
 		<relativePath/>
 	</parent>
-	<groupId>com.podomoroin</groupId>
+	<groupId>com.pomodoroin</groupId>
 	<artifactId>backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>backend</name>
-	<description>Podomoroin Spring Boot Backend</description>
+	<description>Pomodoroin Spring Boot Backend</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>

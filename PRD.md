@@ -1,9 +1,9 @@
-# Product Requirements Document (PRD): Podomoroin
+# Product Requirements Document (PRD): Pomodoroin
 
 ## 1. Executive Summary
 
 - **Problem Statement**: Pengembang membutuhkan aplikasi Pomodoro sederhana tanpa autentikasi untuk melatih integrasi frontend Next.js dan backend Spring Boot.
-- **Proposed Solution**: Web timer Pomodoro ringan ("Podomoroin") dengan alur timer focus/break, alarm audio, kustomisasi durasi, dan data tanpa database.
+- **Proposed Solution**: Web timer Pomodoro ringan ("Pomodoroin") dengan alur timer focus/break, alarm audio, kustomisasi durasi, dan data tanpa database.
 - **Success Criteria**:
   - Timer akurasi 100% tanpa drift > 1 detik per 25 menit.
   - Audio alarm berbunyi tepat waktu saat countdown menyentuh `00:00`.

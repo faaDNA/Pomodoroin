@@ -1,5 +1,5 @@
 ---
-name: Podomoroin
+name: Pomodoroin
 description: Minimalist, offline-first Pomodoro timer with a mode-colored countdown ring.
 colors:
   ground: "#020617"
@@ -106,13 +106,13 @@ components:
     padding: "20px"
 ---
 
-# Design System: Podomoroin
+# Design System: Pomodoroin
 
 ## Overview
 
 **Creative North Star: "The Desk Timer"**
 
-Podomoroin looks like a single piece of hardware dropped on a dark desk: one dial, one number, one button that starts it. The screen holds a 672px column at the center of the viewport and nothing else — no navigation chrome, no statistics dashboard, no motivational copy wrapped around the clock. Silence is the primary visual material; the clock is the only object with weight.
+Pomodoroin looks like a single piece of hardware dropped on a dark desk: one dial, one number, one button that starts it. The screen holds a 672px column at the center of the viewport and nothing else — no navigation chrome, no statistics dashboard, no motivational copy wrapped around the clock. Silence is the primary visual material; the clock is the only object with weight.
 
 The world is the category-standard dark operative surface, executed with restraint: a near-black slate ground, one-pixel slate borders instead of shadows, and a single accent that shifts with the timer mode. Chrome (brand mark, active tab, focus outline) is always sky; the mode accents — sky for focus, green for short break, violet for long break — are reserved for the progress ring so the ring alone announces state.
 
@@ -174,7 +174,7 @@ A cool slate scale carries the entire surface; accents appear only where the tim
 ### Hierarchy
 
 - **Display** (700, 48px/60px responsive to 60px at `sm`, line-height 1, tracking -0.025em): The countdown only. `tabular-nums` so digits do not jitter as the timer ticks.
-- **Title** (600, 18px, line-height 1.4, tracking -0.025em): The "Podomoroin" wordmark; the brand mark "P" is 18px/700 in the same size.
+- **Title** (600, 18px, line-height 1.4, tracking -0.025em): The "Pomodoroin" wordmark; the brand mark "P" is 18px/700 in the same size.
 - **Body** (400, 16px, line-height 1.5): Settings heading context, input values.
 - **Label** (600, 14px, line-height 1.4, growing to 16px at `sm`): Buttons — "Mulai", "Atur ulang", "Suara hidup", "Pengaturan".
 - **Label Compact** (500, 13px, line-height 1.25, growing to 14px at `sm`): The three mode tabs. Tight leading so the two-word Indonesian labels wrap without changing row height.

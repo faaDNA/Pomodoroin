@@ -1,4 +1,4 @@
-package com.podomoroin.backend;
+package com.pomodoroin.backend;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class PodomoroController {
+public class PomodoroController {
 
     private final AtomicInteger sessionsCompleted = new AtomicInteger();
 

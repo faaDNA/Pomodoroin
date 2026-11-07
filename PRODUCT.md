@@ -16,7 +16,7 @@ Developer/student yang butuh aplikasi Pomodoro ringan tanpa login untuk sesi ker
 
 ## Product Purpose
 
-Podomoroin adalah web Pomodoro timer minimalis, cepat, dan responsif. Membantu pengguna tetap fokus dengan interval kerja (25 min) dan istirahat (5/15 min), notifikasi alarm audio, dan opsi kustomisasi durasi.
+Pomodoroin adalah web Pomodoro timer minimalis, cepat, dan responsif. Membantu pengguna tetap fokus dengan interval kerja (25 min) dan istirahat (5/15 min), notifikasi alarm audio, dan opsi kustomisasi durasi.
 
 ## Positioning
 
@@ -36,6 +36,6 @@ Penggunaan personal di browser (desktop/laptop/tablet) saat bekerja atau belajar
 
 ## Brand Commitments
 
-- Nama: **Podomoroin**
+- Nama: **Pomodoroin**
 - Karakter: Minimalis, bersih, terfokus, modern.
 - Arah visual: kategori-standar (pemilik memilih jalur sederhana "buat belajar"; keputusan aesthetik tidak diinovasi tanpa izin).
